@@ -1,0 +1,36 @@
+Task: Implement ManageWare Hardware & Inventory System
+ Research and Planning
+ Analyze 
+readme.md
+ Explore existing codebase
+ Create implementation plan (Approved)
+ Phase 1: Backend Setup (FastAPI & NeonDB)
+ Initialize FastAPI project in backend/ directory
+ Setup NeonDB connection strings (ready for .env)
+ Define simple database models using SQLAlchemy (14 tables)
+ Setup basic API routes for Assets & Requests
+ Refine TypeScript interfaces in frontend to match backend models
+ Phase 2: Authentication & RBAC
+ Implement Login Page
+ Implement Authentication Logic (FastAPI + JWT)
+ Implement Role-Based Access Control
+ Phase 3: Hardware Asset Management
+ Implement Asset IDs auto-generation logic
+ Implement Asset Details view and editing
+ Implement Lifecycle status update flow
+ Phase 4: Procurement Workflow
+ Implement Hardware Request form
+ Implement Approval/Rejection flow for Finance Directors
+ Implement Automated Purchase Order generation
+ Phase 5: Inventory Tracking & Thresholds
+ Implement real-time inventory quantity monitoring
+ Implement Threshold alerts (UI notifications)
+ Phase 6: Reporting & Analytics
+ Implement real charts using Recharts
+ Implement Inventory Accuracy, Financial Variance, and Asset Aging reports
+ Phase 7: Activity Logging & Audit
+ Implement a system-wide activity logger
+ Create audit log viewing interface
+ Phase 8: Final Review & Polish
+ UI/UX refinements
+ Cross-browser testing

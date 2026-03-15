@@ -1,0 +1,58 @@
+@import "tailwindcss";
+
+:root {
+  --background: #e1e1e1;
+  --foreground: #1e1e1e;
+  
+  /* ManageWare Theme Colors */
+  --wine-red: #722f37;
+  --wine-red-light: #8b3a43;
+  --champagne-gold: #f7e7ce;
+  --champagne-gold-dark: #e6d5b8;
+  --cool-silver: #e5e4e2;
+  --cool-silver-dark: #cfcecc;
+  
+  /* Constraints */
+  --radius-max: 1rem; /* rounded-2xl */
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  
+  --color-wine-red: var(--wine-red);
+  --color-wine-red-light: var(--wine-red-light);
+  --color-champagne-gold: var(--champagne-gold);
+  --color-champagne-gold-dark: var(--champagne-gold-dark);
+  --color-cool-silver: var(--cool-silver);
+  --color-cool-silver-dark: var(--cool-silver-dark);
+}
+
+@layer base {
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+
+  /* Global constraint for corners */
+  * {
+    border-radius: min(inherit, var(--radius-max));
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-semibold;
+  }
+}
+
+/* Custom utility classes */
+.btn-primary {
+  @apply bg-[var(--wine-red)] text-white px-4 py-2 hover:bg-[var(--wine-red-light)] transition-colors;
+}
+
+.card-info {
+  @apply bg-[var(--cool-silver)] border border-[var(--cool-silver-dark)] p-4 shadow-sm;
+}
+
+.text-gold {
+  @apply text-[var(--champagne-gold-dark)];
+}
