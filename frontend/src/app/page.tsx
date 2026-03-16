@@ -121,7 +121,7 @@ export default function Dashboard() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-xl md:text-2xl font-bold text-gray-900 uppercase tracking-tight">PORTFOLIO STATUS</h1>
+        <h1 className="text-xl md:text-2xl font-bold text-gray-900 uppercase tracking-tight">Dashboard</h1>
         <p className="text-sm md:text-base text-gray-600 font-medium">Real-time overview of hardware distribution across your real estate holdings.</p>
       </div>
 

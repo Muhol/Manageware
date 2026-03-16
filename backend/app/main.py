@@ -89,6 +89,7 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
             headers={"WWW-Authenticate": "Bearer"},
         )
     access_token = auth.create_access_token(data={"sub": user.email})
+    create_audit_log(db, user.id, "USER_LOGIN", "AUTH", user.id, f"User {user.email} logged into the system.")
     return {"access_token": access_token, "token_type": "bearer"}
 
 @app.get("/users/me", response_model=schemas.User)
@@ -143,7 +144,7 @@ async def reset_password(data: schemas.PasswordResetConfirm, db: Session = Depen
     return {"detail": "Password has been reset successfully. You can now login with your new password."}
 
 @app.post("/users/", response_model=schemas.User, dependencies=[Depends(check_role(["Administrator"]))])
-async def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
+async def create_user(user: schemas.UserCreate, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_active_user)):
     db_user = db.query(models.User).filter(models.User.email == user.email).first()
     if db_user:
         raise HTTPException(status_code=400, detail="Email already registered")
@@ -176,6 +177,7 @@ async def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
             db.add(prop)
             db.commit()
 
+    create_audit_log(db, current_user.id, "CREATE_USER", "USER", db_user.id, f"Created user {db_user.email} with role {role.name if role else 'Unknown'}")
     return db_user
 
 @app.get("/users/", response_model=List[schemas.User], dependencies=[Depends(check_role(["Administrator", "IT Specialist", "Property Manager"]))])
@@ -192,7 +194,7 @@ async def read_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_
     return query.offset(skip).limit(limit).all()
 
 @app.patch("/users/{user_id}", response_model=schemas.User, dependencies=[Depends(check_role(["Administrator"]))])
-async def update_user(user_id: str, user_update: schemas.UserUpdate, db: Session = Depends(get_db)):
+async def update_user(user_id: str, user_update: schemas.UserUpdate, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_active_user)):
     db_user = db.query(models.User).filter(models.User.id == user_id).first()
     if not db_user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -239,10 +241,12 @@ async def update_user(user_id: str, user_update: schemas.UserUpdate, db: Session
 
     db.commit()
     db.refresh(db_user)
+    
+    create_audit_log(db, current_user.id, "UPDATE_USER", "USER", db_user.id, f"Updated user profile for {db_user.email}")
     return db_user
 
 @app.delete("/users/{user_id}", dependencies=[Depends(check_role(["Administrator"]))])
-async def delete_user(user_id: str, db: Session = Depends(get_db)):
+async def delete_user(user_id: str, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_active_user)):
     db_user = db.query(models.User).filter(models.User.id == user_id).first()
     if not db_user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -251,6 +255,7 @@ async def delete_user(user_id: str, db: Session = Depends(get_db)):
     # To keep constraints simple, we will do a soft delete via is_active
     db_user.is_active = False
     db.commit()
+    create_audit_log(db, current_user.id, "DEACTIVATE_USER", "USER", db_user.id, f"Deactivated user {db_user.email}")
     return {"detail": "User deactivated successfully"}
 
 @app.get("/roles/", response_model=List[schemas.Role])
@@ -394,11 +399,12 @@ def read_root():
 # --- Properties ---
 
 @app.post("/properties/", response_model=schemas.Property)
-def create_property(property: schemas.PropertyCreate, db: Session = Depends(get_db)):
+def create_property(property: schemas.PropertyCreate, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_active_user)):
     db_property = models.Property(**property.dict())
     db.add(db_property)
     db.commit()
     db.refresh(db_property)
+    create_audit_log(db, current_user.id, "CREATE_PROPERTY", "PROPERTY", db_property.id, f"Registered new estate: {db_property.name}")
     return db_property
 
 @app.get("/properties/", response_model=List[schemas.Property])
@@ -415,11 +421,12 @@ def read_properties(skip: int = 0, limit: int = 100, db: Session = Depends(get_d
 # --- Asset Types ---
 
 @app.post("/asset-types/", response_model=schemas.AssetType)
-def create_asset_type(asset_type: schemas.AssetTypeCreate, db: Session = Depends(get_db)):
+def create_asset_type(asset_type: schemas.AssetTypeCreate, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_active_user)):
     db_asset_type = models.AssetType(**asset_type.dict())
     db.add(db_asset_type)
     db.commit()
     db.refresh(db_asset_type)
+    create_audit_log(db, current_user.id, "CREATE_ASSET_TYPE", "ASSET_TYPE", db_asset_type.id, f"Defined new hardware category: {db_asset_type.name}")
     return db_asset_type
 
 @app.get("/asset-types/", response_model=List[schemas.AssetType])
@@ -586,6 +593,7 @@ def update_inventory(inventory_id: str, inventory: schemas.InventoryUpdate, db: 
     
     db.commit()
     db.refresh(db_inventory)
+    create_audit_log(db, current_user.id, "UPDATE_INVENTORY", "INVENTORY", db_inventory.id, f"Updated stock parameters for {db_inventory.asset_type.name if db_inventory.asset_type else 'hardware'}")
     return db_inventory
 
 @app.post("/inventory/sync")
@@ -719,6 +727,7 @@ def create_purchase_request(request: schemas.PurchaseRequestCreate, db: Session 
     
     db.commit()
     db.refresh(db_request)
+    create_audit_log(db, current_user.id, "CREATE_REQUEST", "PURCHASE_REQUEST", db_request.id, f"Submitted acquisition request with {len(request.items)} items.")
     return db_request
 
 @app.get("/purchase-requests/", response_model=List[schemas.PurchaseRequest])
@@ -833,7 +842,7 @@ def reject_purchase_request(request_id: str, approval_data: schemas.ApprovalCrea
 from fastapi.responses import FileResponse
 
 @app.get("/purchase-orders/{po_id}/download")
-def download_purchase_order(po_id: str, db: Session = Depends(get_db)):
+def download_purchase_order(po_id: str, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_active_user)):
     db_po = db.query(models.PurchaseOrder).filter(models.PurchaseOrder.id == po_id).first()
     if not db_po:
         raise HTTPException(status_code=404, detail="Purchase Order not found")
@@ -848,6 +857,7 @@ def download_purchase_order(po_id: str, db: Session = Depends(get_db)):
         except Exception as e:
             raise HTTPException(status_code=500, detail="Could not generate PDF on the fly")
             
+    create_audit_log(db, current_user.id, "DOWNLOAD_PO", "PURCHASE_ORDER", po_id, f"Purchase order {db_po.po_number} was downloaded.")
     return FileResponse(db_po.generated_pdf_path, media_type='application/pdf', filename=f"{db_po.po_number}.pdf")
 
 @app.get("/purchase-requests/{request_id}/po", response_model=schemas.PurchaseOrder)

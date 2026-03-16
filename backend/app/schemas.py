@@ -250,7 +250,7 @@ class PasswordResetConfirm(BaseModel):
 # --- Audit Logging Schemas ---
 
 class AuditLogBase(BaseModel):
-    user_id: str
+    user_id: Optional[str] = None
     action: str
     resource_type: str
     resource_id: str

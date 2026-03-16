@@ -67,13 +67,21 @@ export default function AuditLogsPage() {
     });
 
     const getActionColor = (action: string) => {
-        if (action.includes("APPROVE") || action.includes("REGISTER")) return "text-green-600 bg-green-50 border-green-100";
-        if (action.includes("REJECT") || action.includes("DELETE")) return "text-red-600 bg-red-50 border-red-100";
-        if (action.includes("UPDATE")) return "text-amber-600 bg-amber-50 border-amber-100";
+        const a = action.toUpperCase();
+        if (a.includes("APPROVE") || a.includes("REGISTER") || a.includes("CREATE") || a.includes("SUCCESS")) 
+            return "text-green-600 bg-green-50 border-green-100";
+        if (a.includes("REJECT") || a.includes("DELETE") || a.includes("DEACTIVATE")) 
+            return "text-red-600 bg-red-50 border-red-100";
+        if (a.includes("UPDATE") || a.includes("SYNC") || a.includes("CHANGE")) 
+            return "text-amber-600 bg-amber-50 border-amber-100";
+        if (a.includes("LOGIN") || a.includes("AUTH")) 
+            return "text-indigo-600 bg-indigo-50 border-indigo-100";
+        if (a.includes("DOWNLOAD")) 
+            return "text-cyan-600 bg-cyan-50 border-cyan-100";
         return "text-blue-600 bg-blue-50 border-blue-100";
     };
 
-    const resourceTypes = ["ALL", "ASSET", "PURCHASE_REQUEST", "PURCHASE_ORDER", "INVENTORY", "USER"];
+    const resourceTypes = ["ALL", "ASSET", "PURCHASE_REQUEST", "PURCHASE_ORDER", "INVENTORY", "USER", "PROPERTY", "ASSET_TYPE", "AUTH"];
 
     if (loading && logs.length === 0) {
         return (
@@ -90,7 +98,7 @@ export default function AuditLogsPage() {
                 <div>
                     <h1 className="text-xl md:text-2xl font-black text-gray-900 uppercase tracking-tight flex items-center">
                         <Shield className="h-6 w-6 mr-3 text-[var(--wine-red)]" />
-                        SYSTEM AUDIT TRAIL
+                        SYSTEM AUDIT
                     </h1>
                     <p className="text-sm md:text-base text-gray-600 font-medium">Immutable registry of all hardware transactions and system events.</p>
                 </div>
@@ -198,9 +206,24 @@ export default function AuditLogsPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {[
-                    { label: "Security Events", value: "0", sub: "Last 24h", color: "var(--wine-red)" },
-                    { label: "Asset Modifications", value: logs.filter(l => l.resource_type === "ASSET").length, sub: "All time", color: "var(--champagne-gold-dark)" },
-                    { label: "Procurement Approvals", value: logs.filter(l => l.resource_type === "PURCHASE_REQUEST").length, sub: "Verified", color: "var(--wine-red-light)" },
+                    { 
+                        label: "Security Events", 
+                        value: logs.filter(l => l.resource_type === "AUTH" || l.action.toLowerCase().includes("password")).length, 
+                        sub: "Identity Actions", 
+                        color: "var(--wine-red)" 
+                    },
+                    { 
+                        label: "Hardware Lifecycle", 
+                        value: logs.filter(l => ["ASSET", "INVENTORY", "ASSET_TYPE"].includes(l.resource_type)).length, 
+                        sub: "Modifications", 
+                        color: "var(--champagne-gold-dark)" 
+                    },
+                    { 
+                        label: "Procurement Ledger", 
+                        value: logs.filter(l => ["PURCHASE_REQUEST", "PURCHASE_ORDER"].includes(l.resource_type)).length, 
+                        sub: "Financial Events", 
+                        color: "var(--wine-red-light)" 
+                    },
                 ].map((stat, i) => (
                     <div key={i} className="bg-white p-6 border border-[var(--cool-silver-dark)] rounded-3xl shadow-xl flex items-center justify-between group hover:shadow-2xl transition-all">
                         <div>

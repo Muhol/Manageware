@@ -276,10 +276,10 @@ export default function StaffPage() {
                 {isAdmin && (
                     <button
                         onClick={openCreateModal}
-                        className="flex items-center justify-center px-6 py-4 bg-[var(--wine-red)] text-white font-black uppercase tracking-widest hover:bg-[var(--wine-red-light)] transition-all rounded-2xl shadow-xl hover:-translate-y-1 active:scale-95"
+                        className="flex items-center justify-center px-6 py-4 bg-[var(--wine-red)] text-white font-black capitalize tracking-widest hover:bg-[var(--wine-red-light)] transition-all rounded-2xl shadow-xl hover:-translate-y-1 active:scale-95"
                     >
                         <UserPlus className="h-5 w-5 mr-2.5" />
-                        Provision New Access
+                        create new account
                     </button>
                 )}
             </div>
