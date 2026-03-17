@@ -5,7 +5,7 @@ import Link from "next/link";
 import { CreditCard, Plus, FileText, CheckCircle, Clock, XCircle, Search, Loader2, AlertCircle, TrendingDown, ArrowRight, ThumbsUp, ThumbsDown, Download, Shield } from "lucide-react";
 import { Table } from "@/components/Table";
 import { PurchaseRequest, User, PurchaseOrder } from "@/types";
-import { apiFetch, authApi } from "@/lib/api";
+import { apiFetch, authApi, apiFetchBlob } from "@/lib/api";
 import { RequestHardwareModal } from "@/components/RequestHardwareModal";
 import { Modal } from "@/components/Modal";
 
@@ -155,9 +155,29 @@ export default function ProcurementPage() {
     const handleDownload = async (requestId: string) => {
         try {
             const po = await apiFetch(`/purchase-requests/${requestId}/po`);
-            window.open(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/purchase-orders/${po.id}/download`, '_blank');
+            const blob = await apiFetchBlob(`/purchase-orders/${po.id}/download`);
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${po.po_number}.pdf`;
+            a.click();
+            URL.revokeObjectURL(url);
         } catch (err: any) {
-            alert("Could not fetch Purchase Order for this request.");
+            alert("Could not download Purchase Order: " + err.message);
+        }
+    };
+
+    const handleDownloadOrder = async (poId: string, poNumber: string) => {
+        try {
+            const blob = await apiFetchBlob(`/purchase-orders/${poId}/download`);
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${poNumber}.pdf`;
+            a.click();
+            URL.revokeObjectURL(url);
+        } catch (err: any) {
+            alert("Could not download Purchase Order: " + err.message);
         }
     };
 
@@ -257,7 +277,7 @@ export default function ProcurementPage() {
             header: "Actions",
             accessor: (item: PurchaseOrder) => (
                 <button
-                    onClick={() => window.open(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/purchase-orders/${item.id}/download`, '_blank')}
+                    onClick={() => handleDownloadOrder(item.id, item.po_number)}
                     className="flex items-center text-[10px] font-black uppercase tracking-widest text-[var(--wine-red)] hover:underline"
                 >
                     <Download className="h-3 w-3 mr-2" /> PO (PDF)

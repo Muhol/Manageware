@@ -174,8 +174,8 @@ class PurchaseRequest(PurchaseRequestBase):
 # --- Financial Approval ---
 
 class ApprovalBase(BaseModel):
-    purchase_request_id: str
-    status: str
+    purchase_request_id: Optional[str] = None
+    status: Optional[str] = None
     approval_notes: Optional[str] = None
 
 class ApprovalCreate(ApprovalBase):

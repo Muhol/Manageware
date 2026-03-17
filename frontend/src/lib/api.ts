@@ -26,6 +26,28 @@ export async function apiFetch(endpoint: string, options: RequestInit = {}) {
     return response.json();
 }
 
+export async function apiFetchBlob(endpoint: string, options: RequestInit = {}): Promise<Blob> {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+
+    const headers = {
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        ...options.headers,
+    };
+
+    const response = await fetch(`${API_URL}${endpoint}`, { ...options, headers });
+
+    if (!response.ok) {
+        if (response.status === 401 && typeof window !== 'undefined') {
+            localStorage.removeItem('token');
+            window.location.href = '/login';
+        }
+        const error = await response.json().catch(() => ({ detail: 'Download failed' }));
+        throw new Error(error.detail || 'Download failed');
+    }
+
+    return response.blob();
+}
+
 export const authApi = {
     login: async (formData: FormData) => {
         const response = await fetch(`${API_URL}/token`, {

@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { MapPin, Building2, Search, Info, Loader2, AlertCircle, ArrowUpRight, Shield } from "lucide-react";
+import { MapPin, Building2, Search, Info, Loader2, AlertCircle, ArrowUpRight, Shield, Plus } from "lucide-react";
 import { Property, User } from "@/types";
 import { apiFetch, authApi } from "@/lib/api";
 import { useEffect, useState } from "react";
+import { AddPropertyModal } from "@/components/AddPropertyModal";
 
 export default function PropertiesPage() {
     const [properties, setProperties] = useState<Property[]>([]);
@@ -12,6 +13,7 @@ export default function PropertiesPage() {
     const [error, setError] = useState("");
     const [searchTerm, setSearchTerm] = useState("");
     const [currentUser, setCurrentUser] = useState<User | null>(null);
+    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
     useEffect(() => {
         fetchProperties();
@@ -22,6 +24,7 @@ export default function PropertiesPage() {
     const isSiteRole = siteRoles.includes(currentUser?.role?.name || "");
     const canViewProperties = ["Administrator", "Finance Director", "IT Specialist", "Property Manager"].includes(currentUser?.role?.name || "");
     const hasNoProperty = isSiteRole && !currentUser?.property_id;
+    const isAdmin = currentUser?.role?.name === "Administrator";
 
     if (hasNoProperty && currentUser) {
         return (
@@ -87,15 +90,26 @@ export default function PropertiesPage() {
                     <p className="text-sm md:text-base text-gray-600 font-medium">Visual overview of managed real estate holdings and hardware distribution.</p>
                 </div>
 
-                <div className="relative group min-w-[300px]">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 group-focus-within:text-[var(--wine-red)] transition-colors" />
-                    <input
-                        type="text"
-                        placeholder="Search property name or city..."
-                        className="w-full pl-10 pr-4 py-3 bg-white border border-[var(--cool-silver-dark)] text-sm font-bold focus:ring-2 focus:ring-[var(--wine-red-light)] rounded-xl outline-none shadow-sm"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                    />
+                <div className="flex items-center gap-4">
+                    {isAdmin && (
+                        <button
+                            onClick={() => setIsAddModalOpen(true)}
+                            className="flex items-center justify-center px-6 py-3 bg-[var(--wine-red)] text-white font-black uppercase tracking-widest hover:bg-[var(--wine-red-light)] transition-all rounded-2xl shadow-xl hover:-translate-y-1 active:scale-95 whitespace-nowrap"
+                        >
+                            <Plus className="h-4 w-4 mr-2" />
+                            New Property
+                        </button>
+                    )}
+                    <div className="relative group min-w-[260px]">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 group-focus-within:text-[var(--wine-red)] transition-colors" />
+                        <input
+                            type="text"
+                            placeholder="Search property name or city..."
+                            className="w-full pl-10 pr-4 py-3 bg-white border border-[var(--cool-silver-dark)] text-sm font-bold focus:ring-2 focus:ring-[var(--wine-red-light)] rounded-xl outline-none shadow-sm"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                    </div>
                 </div>
             </div>
 
@@ -155,6 +169,12 @@ export default function PropertiesPage() {
                     )}
                 </div>
             )}
+
+            <AddPropertyModal
+                isOpen={isAddModalOpen}
+                onClose={() => setIsAddModalOpen(false)}
+                onSuccess={fetchProperties}
+            />
         </div>
     );
 }
